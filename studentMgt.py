@@ -1,7 +1,7 @@
 '''
 @Author: your name
 @Date: 2020-01-27 14:54:46
-@LastEditTime : 2020-02-06 20:51:41
+@LastEditTime : 2020-02-06 23:30:08
 @LastEditors  : Please set LastEditors
 @Description: In User Settings Edit
 @FilePath: /vscode_scripts/test.py
@@ -34,9 +34,9 @@ def menu():
 def save(studentlist):
     """save student info into local storage"""
     try:
-        f = open("student.txt", "a")
+        f = open(filename, "a")
     except Exception as e:
-        f = open("student.txt", "w")
+        f = open(filename, "w")
     for line in studentlist:
         f.write(str(line) + "\n")
     f.close()
@@ -58,7 +58,9 @@ def insert():
     新增学生信息
     """
     studentlist = []
+    student_old = []
     mark = True
+    modify_mark = True
     while mark:
         id = input("请输入学生id(如1001)： ")
         name = input("请输入学名姓名: ")
@@ -71,16 +73,31 @@ def insert():
         if not id or not name or not english_score or not python_score:
             print("学生相关信息不能为空!")
             continue
-        if not id.isalnum() or not name.isalpha() or english_score.isdigit() or python_score.isdigit():
+        if not id.isalnum() or not name.isalpha() or not english_score.isdigit() or not python_score.isdigit():
             print("学生信息要符合规范")
             continue
-        student={"id": id,"name": name, "python": python_score, "english": english_score}
-        studentlist.append(studnet)
+        for line in studentlist:
+            if id == line['id']:
+                modify_mark=False
+                print("学生id号不能重复，请重新输入。")
+                break
+        with open(filename,'r') as f:
+            students = f.readlines()
+            for line in students:
+                student_old.append(eval(line))
+        for line in student_old:
+            if id == line['id']:
+                modify_mark=False
+                print("学生id号不能重复，请重新输入。")
+                break
+        if modify_mark == True:
+            student={"id": id,"name": name, "python": python_score, "english": english_score}
+            studentlist.append(student)
         inputMark = input("是否继续输入(Y/N):")
         if inputMark == "y" or inputMark == "Y":
             mark = True
         else:
-            mark = False
+             mark = False
     save(studentlist)
     print("学生信息录入完毕!") 
         
@@ -89,8 +106,8 @@ def query():
     mark = True
     student_query = []
     while mark:
-        id = ""
-        name = ""
+#        id = ""
+#        name = ""
         if os.path.exists(filename):
             mode=input("按id查询请按1，按name查询请按2: ")
             if mode == "1":
@@ -112,7 +129,7 @@ def query():
                             student_query.append(d)
             show_student(student_query)
             student_query.clear()
-            inputMark = input("是否继续查询，请输入Y or N")
+            inputMark = input("是否继续查询，请输入(Y/N):  ")
             if inputMark == 'y' or inputMark == 'Y':
                 mark = True
             else:
@@ -124,10 +141,11 @@ def query():
 def delete():
     '''delete student info by student id.'''
     mark = True  #circle mark
+    student_delete = []
     while mark:
         studentId = input("请输入要删除的学生id: ")
         stype = typeJudge(studentId)
-        if type == "alnum":             
+        if stype == "alnum":             
             #studentId字符类型为数字及字符    
             if os.path.exists(filename):
                 with open(filename,'r') as rfile:
@@ -141,9 +159,14 @@ def delete():
                     for list in studentOld:
                         d = dict(eval(list))
                         if d['id'] != studentId:
-                            sfile.write(str(d)+"\n")
+                            wfile.write(str(d)+"\n")
                         else:
+                            student_delete.append(eval(list))
                             ifDel = True
+                print("下面为要删除的信息，请确认是否删除(y/n)")
+                show_student(student_delete)
+                del_mark = input("请确认是否需要删除(y/n):  ")
+                if del_mark == 'y' or del_mark == 'Y':    
                     if ifDel:
                         print("学生ID为%s的学生信息已删除." % studentId)
                     else:
@@ -154,7 +177,6 @@ def delete():
         else:
             print("输入的信息为无效信息，请重新输入.")
             continue
-        show()
         inputMark = input("是否继续删除学生(y/n)")
         if inputMark == 'y' or inputMark == 'Y':
             mark = True    # continue to delete
@@ -167,14 +189,14 @@ def show_student(querylist):
     if not querylist:
         print("None data info")
         return
-    format_title = "{:^6d}{:^12d}\t{:^8d}\t{:^10d}\t{:^10d}"
-    print(format_title.format("id", "name", "english_score", "python_score"))
-    format_data = "{:^6d}{:^12d}\t{:^12d}\t{:^12d}\t{:^12d}"
+    format_title = "{:^6}{:^12}\t{:^8}\t{:^10}\t{:^10}"
+    print(format_title.format("id", "name", "english_score", "python_score", "total"))
+    format_data = "{:^6}{:^12}\t{:^12}\t{:^12}\t{:^12}"
     for line in querylist:
         id=line['id']
         name=line['name']
-        python_score=line['python_score']
-        english_score=line['english_score']
+        python_score=line['python']
+        english_score=line['english']
         sum_score=int(python_score)+int(english_score)
         print(format_data.format(id,name,english_score,python_score,sum_score))
         
@@ -283,27 +305,28 @@ def main():
     while ctrl:
         menu()
         option = input("请选择功能菜单:  ")
-        optionType = typeJudge(option)
-        if optionType == "alpha":
-            if option in ['0','1','2','3','4','5','6','7']:
-                option_int=int(option)
-                if option_int == 0:
-                    print("您已退出学生管理系统.")
-                    ctrl = False
-                elif option_int == 1:
-                    insert()
-                elif option_int == 2:
-                    query()
-                elif option_int == 3:
-                    delete()
-                elif option_int == 4:
-                    modify()
-                elif option_int == 5:
-                    sort()
-                elif option_int == 6:
-                    sumStudent()
-                elif option_int == 7:
-                    show()
+        option_str = re.sub("\D", "", option)
+#        optionType = typeJudge(option)
+#        if optionType == "alpha":
+        if option in ['0','1','2','3','4','5','6','7']:
+            option_int=int(option)
+            if option_int == 0:
+                print("您已退出学生管理系统.")
+                ctrl = False
+            elif option_int == 1:
+                insert()
+            elif option_int == 2:
+                query()
+            elif option_int == 3:
+                delete()
+            elif option_int == 4:
+                modify()
+            elif option_int == 5:
+                sort()
+            elif option_int == 6:
+                sumStudent()
+            elif option_int == 7:
+                show()
                     
 if __name__ == "__main__":
     main()
