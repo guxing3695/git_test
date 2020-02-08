@@ -1,7 +1,7 @@
 '''
 @Author: your name
 @Date: 2020-01-27 14:54:46
-@LastEditTime : 2020-02-06 23:30:08
+@LastEditTime : 2020-02-08 11:21:22
 @LastEditors  : Please set LastEditors
 @Description: In User Settings Edit
 @FilePath: /vscode_scripts/test.py
@@ -48,7 +48,9 @@ def typeJudge(strName):
         elif strName.isdigit():
             typename = "digit"    #typename由数字组成
         elif strName.isalpha():
-            typename = "alpha"    #typename由字符组成
+            typename = "alpha"
+        else:
+            typename = "space"    #typename由字符组成
     else:
         typename="zero"  # strName is null        
     return typename
@@ -144,8 +146,8 @@ def delete():
     student_delete = []
     while mark:
         studentId = input("请输入要删除的学生id: ")
-        stype = typeJudge(studentId)
-        if stype == "alnum":             
+        s_type = typeJudge(studentId)
+        if s_type == "alnum":             
             #studentId字符类型为数字及字符    
             if os.path.exists(filename):
                 with open(filename,'r') as rfile:
@@ -163,17 +165,18 @@ def delete():
                         else:
                             student_delete.append(eval(list))
                             ifDel = True
-                print("下面为要删除的信息，请确认是否删除(y/n)")
-                show_student(student_delete)
-                del_mark = input("请确认是否需要删除(y/n):  ")
-                if del_mark == 'y' or del_mark == 'Y':    
-                    if ifDel:
-                        print("学生ID为%s的学生信息已删除." % studentId)
+                    if student_delete:
+                        print("删除的信息如下：")
+                        show_student(student_delete)
+                        del_mark = input("请确认是否需要删除(y/n):  ")
+                        if del_mark == 'y' or del_mark == 'Y':    
+                            if ifDel:
+                                print("学生ID为%s的学生信息已删除." % studentId)
+                                student_delete.clear()
+                            else:
+                                print("未找到学生ID为%s的学生信息." % studentId)
                     else:
-                        print("未找到学生ID为%s的学生信息." % studentId)
-        elif stype == "zero":
-            print("无学生信息!")
-            break
+                        print("您输入的工号未查找到相关数据.")
         else:
             print("输入的信息为无效信息，请重新输入.")
             continue
@@ -200,51 +203,112 @@ def show_student(querylist):
         sum_score=int(python_score)+int(english_score)
         print(format_data.format(id,name,english_score,python_score,sum_score))
         
-def modify_student():
-    '''修改学生信息'''
+'''        
+def modify():
+    """修改学生信息"""
     mark = True
     smark = True
+    fmark = True
     while mark:
         studentId = input("请输入要修改的学生id: ")
         strtype = typeJudge(studentId)
         if strtype == "alnum":
-            d = []
+            student_new = []
             with open(filename,'r') as fread:
-                studentMod = fread.readlines
-                if studentMod is not "":
-                    for line in studentMod:
+                student_old = fread.readlines()
+                if student_old is not "":
+                    for line in student_old:
                         student=dict(eval(line))
-                        d.append(student)
+                        student_new.append(student)
                 else:
-                    print("无学生信息")
+                    print("学生信息为空")
                     break
-            while smark:
-                studentNewId = input("请输入修改的学生id: ")
-                studentName = input("请输入修改的学生姓名: ")
-                english_score_new = input("请输入修改的英语成绩: ")
-                python_score_new = input("请输入修改的python成绩: ")
-            if not studentNewId or not studentName or not english_score_new or not python_score_new:
-                print("您输入的信息含有空的数据，请重新输入.")
-                smark = True
-                continue
-            elif studentNewId.isalnum() and studentName.isalpha() and english_score_new.isdigit() and python_score_new.isdigit():
-                for line in d:
-                    if line['id'] == studentId:
-                        line['id']=studentNewId
-                        line['name']=studentName
-                        line['english_score']=english_score_new
-                        line['python_score']=python_score_new
-                    else:
-                        print("未查询到该学生的信息.请确认学生的id号是否正确.")
-            remark = input("是否继续修改学生的信息(y/n)")
+            for line in student_new:
+                if studentId == line['id']:
+                    while smark:
+                        studentNewId = input("请输入修改的学生id: ")
+                        studentName = input("请输入修改的学生姓名: ")
+                        english_score_new = input("请输入修改的英语成绩: ")
+                        python_score_new = input("请输入修改的python成绩: ")
+                        if not studentNewId or not studentName or not english_score_new or not python_score_new:
+                            print("您输入的信息含有空的数据，请重新输入.")
+                            smark = True
+                            continue
+                        elif studentNewId.isalnum() and studentName.isalpha() and english_score_new.isdigit() and python_score_new.isdigit():
+                            line['id']=studentNewId
+                            line['name']=studentName
+                            line['english']=english_score_new
+                            line['python']=python_score_new
+                            smark=False
+                    fmark=True
+            if fmark:
+                remark = input("是否继续修改学生的信息(y/n)")
+                if remark == 'y' or remark == 'Y':
+                    mark = True
+                else:
+                    mark = False
+                    save(student_new)
+'''
+
+def modify():
+    """
+        根据输入的学生ID号修改该学生的信息,学生ID号为数字字符型，
+    """
+    mark=True
+    ctrl=True
+    f_mark=True
+    while mark:
+        studentId = input("请输入要修改的学生ID号:  ")
+        s_type = typeJudge(studentId)
+        if s_type == 'alnum':
+            student_new = []
+            with open(filename, 'r') as f:
+                student_old = f.readlines()
+                for line in student_old:
+                    line = dict(eval(line))
+                    student_new.append(line)
+            for li in student_new:
+                if li['id'] == studentId:
+                    while ctrl:
+                        judge = True
+                        student_id_new = input("请输入修改后的学生ID:  ")
+                        student_name = input("请输入修改后的学生姓名:  ")
+                        python_new = input("请输入修改后的python成绩:  ")
+                        english_new = input("请输入修改后的english成绩:  ")
+                        if student_id_new.isalnum() and student_name.isalpha() and python_new.isdigit() and english_new.isdigit():
+                            for line in student_new:
+                                if student_id_new == line['id']:
+                                    print("修改的学生id号已存在，请重新输入.")
+                                    judge = False
+                            if judge:
+                                li['id'] = student_id_new
+                                li['name'] = student_name
+                                li['python'] = python_new
+                                li['english'] = english_new
+                                ctrl = False
+                                f_mark = False 
+                        else:
+                            print("您所输入的内容格式不符合要求的，请检查后重新输入.")
+                            continue
+                if not f_mark:
+                    break
+            remark = input("是否需要继续修改学生信息(y/n):  ")
             if remark == 'y' or remark == 'Y':
                 mark = True
             else:
-                mark = Fale
-                save(d)    
-
+                mark = False
+                with open(filename, 'w') as f_write:
+                    for line in student_new:
+                        f_write.write(str(line) + '\n')
+        elif studentId == 'q' or studentId == 'Q':
+            mark = False
+        else:
+            print("学生ID号码不符合要求，请重新输入")
+            continue
+        
 def sort():
-    '''排序显示'''
+    '''根据学生id,python,english等进行排序显示'''
+    mark = True
     if os.path.exists(filename):
         with open(filename, 'r') as f:
             student_old = f.readlines()
@@ -254,34 +318,40 @@ def sort():
             student_new.append(d)
     else:
         return
-    order = input("请选择排序方式(0：升序， 1：降序):  ")
-    if order == 0:
-        orderBool = False
-    elif order == 1:
-        orderBool = True
-    else:
-        print("您的输入有误，请重新输入.")
-        sort()
-    mode = input("请选择排序方式(1.按英语成绩 2.按python成绩 3.按总成绩 4.按学生id)")
-    if mode == "1": 
-        sorted(student_new, key=lambda x: x["english_score"], reverse=orderBool )
-    elif mode == "2":
-        sorted(student_new, key=lambda x: x["python_score"], reverse=orderBool)
-    elif mode == "3":
-        sorted(student_new, key=lambda x: x["english_score"] + x["python_score"], reverse=orderBool)
-    elif mode == "4":
-        sorted(student_new, key=lambda x: x["id"], reverse=orderBool)
-    else:
-        print("您的输入有误，请重新输入.")
-        sort()
-    show_student(student_new)   #display the result by sort
-    
+    while mark:
+        order = input("请选择排序方式(0：升序， 1：降序):  ")
+        if order == '0':
+            orderBool = False
+        elif order == '1':
+            orderBool = True
+        else:
+            print("您的输入有误，请重新输入.")
+            sort()
+        mode = input("请选择排序方式(1.按英语成绩 2.按python成绩 3.按总成绩 4.按学生id)")
+        if mode == '1':
+            student_sort = sorted(student_new, key=lambda x: x["english"], reverse=orderBool )
+        elif mode == '2':
+            student_sort = sorted(student_new, key=lambda x: x["python"], reverse=orderBool)
+        elif mode == '3':
+            student_sort = sorted(student_new, key=lambda x: x["english"] + x["python"], reverse=orderBool)
+        elif mode == '4':
+            student_sort = sorted(student_new, key=lambda x: x["id"], reverse=orderBool)
+        else:
+            print("您的输入有误，请重新输入.")
+            sort()
+        show_student(student_sort)   #display the result by sort
+        re_mark = input("是否继续进行排序查询(y/n)?")
+        if re_mark == 'y' or re_mark == 'Y':
+            mark = True
+        else:
+            mark = False
+            
 def sumStudent():
     '''显示总的学生人数'''
     if os.path.exists(filename):
         with open(filename, 'r') as f:
             student_old = f.readlines()
-            if studentlist is not "":
+            if student_old is not "":
                 totalStudent = len(student_old)
                 print("一共有%d名学生。" % totalStudent)
             else:
@@ -301,6 +371,9 @@ def show():
         print("暂未保存数据信息")
         
 def main():
+    """
+    根据输入的数字，跳转到对应的功能，
+    """
     ctrl = True
     while ctrl:
         menu()
@@ -315,18 +388,30 @@ def main():
                 ctrl = False
             elif option_int == 1:
                 insert()
+                back()
             elif option_int == 2:
                 query()
+                back()
             elif option_int == 3:
                 delete()
+                back()
             elif option_int == 4:
                 modify()
+                back()
             elif option_int == 5:
                 sort()
+                back()
             elif option_int == 6:
                 sumStudent()
+                back()
             elif option_int == 7:
                 show()
-                    
+                back()
+def back():
+    """返回主菜单，更人性化显示"""
+    mark = input("是否返回主菜单(任意键返回主菜单，q/Q退出程序):   ")
+    if mark == 'q' or mark == 'Q':
+        exit()
+        
 if __name__ == "__main__":
     main()
